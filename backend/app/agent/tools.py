@@ -327,12 +327,29 @@ def search_materials(db: Session, args: dict) -> dict:
     query = (args.get("query") or "").lower().strip()
     item_type = args.get("type")  # "material" | "sample" | None
 
+    if not item_type:
+        if "sample" in query:
+            item_type = "sample"
+        elif "material" in query or "brochure" in query or "leaflet" in query:
+            item_type = "material"
+
+    query_words = [
+        w for w in query.split()
+        if len(w) > 2 and w not in ("the", "for", "and", "samples", "sample", "materials", "material")
+    ]
+
+    def matches(item_name: str) -> bool:
+        if not query_words:
+            return True
+        name_lower = item_name.lower()
+        return any(w in name_lower for w in query_words)
+
     results = [
         item
         for item in MATERIALS_CATALOG
-        if (not query or query in item["name"].lower())
-        and (not item_type or item["type"] == item_type)
+        if matches(item["name"]) and (not item_type or item["type"] == item_type)
     ]
+
     names = ", ".join(r["name"] for r in results) or "no matches"
     return {
         "tool": "search_materials",
@@ -340,7 +357,6 @@ def search_materials(db: Session, args: dict) -> dict:
         "results": results,
         "summary": f"Found: {names}",
     }
-
 
 TOOL_REGISTRY = {
     "log_interaction": log_interaction,
