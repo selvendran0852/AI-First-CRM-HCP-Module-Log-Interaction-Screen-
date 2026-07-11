@@ -7,6 +7,11 @@ from app.database import get_db
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
+# In-memory "what interaction is this session currently talking about" tracker.
+# Good enough for a single-process demo; a production build would persist
+# this per session_id in the DB (e.g. a column on a Session/Conversation table).
+_SESSION_LAST_INTERACTION: dict[str, str] = {}
+
 
 @router.post("", response_model=schemas.ChatResponse)
 def chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
@@ -17,7 +22,11 @@ def chat(payload: schemas.ChatRequest, db: Session = Depends(get_db)):
     db.add(models.ChatMessage(session_id=payload.session_id, role="user", content=payload.message))
     db.commit()
 
-    final_state = run_agent(db, payload.session_id, payload.message)
+    last_interaction_id = _SESSION_LAST_INTERACTION.get(payload.session_id)
+    final_state = run_agent(db, payload.session_id, payload.message, interaction_id=last_interaction_id)
+
+    if final_state.get("interaction_id"):
+        _SESSION_LAST_INTERACTION[payload.session_id] = final_state["interaction_id"]
 
     db.add(
         models.ChatMessage(

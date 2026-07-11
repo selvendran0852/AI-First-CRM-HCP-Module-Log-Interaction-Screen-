@@ -102,12 +102,13 @@ def log_interaction(db: Session, args: dict) -> dict:
     db.commit()
     db.refresh(interaction)
 
+    itype = getattr(interaction.interaction_type, "value", interaction.interaction_type)
+    sentiment = getattr(interaction.sentiment, "value", interaction.sentiment)
     return {
         "tool": "log_interaction",
         "interaction_id": interaction.id,
         "hcp_name": hcp.name,
-        "summary": f"Logged {interaction.interaction_type} with {hcp.name} "
-        f"({interaction.sentiment} sentiment).",
+        "summary": f"Logged {itype} with {hcp.name} ({sentiment} sentiment).",
     }
 
 
