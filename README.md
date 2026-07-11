@@ -117,8 +117,8 @@ caller needing to handle retries itself.
 
 ### 1. Database
 
-Create a Postgres (or MySQL) database and update `DATABASE_URL` in `.env`
-(see `backend/.env.example`). Tables are auto-created on startup for this
+Create a Postgres (or MySQL) database and update `DATABASE_URL` in `.env`. 
+Tables are auto-created on startup for this
 assignment; a production build would use Alembic migrations instead.
 
 ### 2. Backend
@@ -127,7 +127,6 @@ assignment; a production build would use Alembic migrations instead.
 cd backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env    # then fill in GROQ_API_KEY and DATABASE_URL
 uvicorn app.main:app --reload --port 8000
 ```
 
